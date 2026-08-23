@@ -11,7 +11,7 @@
     "watch:css": "tailwindcss -i ./src/tailwind-input.css -o ./public/tailwind.css --watch"
   },
   "engines": {
-    "node": ">=18"
+    "node": "22.x"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
