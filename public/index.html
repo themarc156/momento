@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Momento – Die Gemischte Tüte deines Lebens</title>
+  
+  <!-- DYNAMISCHE OPEN GRAPH META TAGS -->
+  <meta property="og:title" id="og-title" content="Momento – Moment des Tages">
+  <meta property="og:description" id="og-desc" content="Von nostalgischen Erinnerungen bis zum realen Heute-Check. Stimmt ab!">
+  <meta property="og:type" content="website">
+
+  <!-- ==========================================================
+       PWA (PROGRESSIVE WEB APP) META-TAGS
+       ==========================================================
+       Diese Tags sorgen dafür, dass Nutzer die App über "Zum
+       Home-Bildschirm hinzufügen" installieren können und sie sich
+       danach wie eine native App anfühlt (eigenes Icon, kein
+       Browser-Adressleisten-Rahmen). -->
+
+  <!-- Verweist auf manifest.json: dort stehen App-Name, Icons, Startseite
+       und der Anzeige-Modus ("standalone" = ohne Browser-UI) definiert. -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Android/Chrome: Farbe der Systemleiste (z.B. Statusleiste oben),
+       wenn die App offen ist. Passend zu deinem dunklen Retro-Theme. -->
+  <meta name="theme-color" content="#080c14">
+
+  <!-- iOS Safari: Es gibt KEIN offizielles manifest.json-Verständnis auf
+       älteren iOS-Versionen, deshalb braucht Safari zusätzlich diese
+       Apple-spezifischen Tags, um die App im "Standalone"-Modus (ohne
+       Adressleiste) darzustellen. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- "black-translucent" lässt den Seiteninhalt UNTER die iOS-Statusleiste
+       laufen (mehr Bildschirmfläche), erfordert aber, dass du mit CSS
+       "safe-area-inset"-Werten oben etwas Abstand lässt, damit z.B. dein
+       Header nicht von der Uhrzeit/dem Akku-Symbol verdeckt wird. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Momento">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+  <!-- Icon, das der Browser-Tab / Lesezeichen verwendet. -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- html2canvas wurde entfernt: shareToStory() in script.js zeichnet die
+       Instagram-Story komplett nativ über die <canvas>-2D-API, die
+       Bibliothek wird nirgends mehr aufgerufen. -->
+  
+  <!-- TAILWIND CSS (vorkompiliert statt CDN)
+       ==========================================================
+       Vorher: <script src="https://cdn.tailwindcss.com"></script> - das lädt
+       im Browser JEDES Nutzers ein großes JS-Paket, das dort live CSS
+       generiert. Tailwind selbst rät davon für den echten Betrieb ab.
+       Jetzt: "npm run build:css" erzeugt EINMAL (bei dir, nicht beim
+       Nutzer) eine fertige, kleine tailwind.css mit genau den Klassen, die
+       im Projekt tatsächlich vorkommen. Der Nutzer lädt nur noch ganz
+       normales, fertiges CSS - schneller und ganz ohne Mehraufwand für
+       dich im Alltag (siehe Erklärung im Chat: einmal einrichten, danach
+       läuft "npm run dev" wie gewohnt weiter). -->
+  <link rel="stylesheet" href="tailwind.css">
+
+  <!-- CUSTOM CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-retro-bg text-retro-text font-sans h-[100dvh] flex flex-col justify-between overflow-hidden antialiased selection:bg-retro-accent selection:text-white">
+
+  <!-- HEADER -->
+<header class="flex-shrink-0 bg-retro-bg/95 backdrop-blur-md border-b border-retro-border p-3 text-retro-text z-40">
+  <div class="max-w-md mx-auto flex items-center justify-between gap-2">
+    
+    <!-- Linker Bereich: Icon + Titel + Untertitel -->
+    <div class="flex items-center space-x-2 cursor-pointer min-w-0" onclick="resetDeck()" role="button" tabindex="0" aria-label="Deck zurücksetzen">
+      <i data-lucide="sparkles" class="text-retro-accent w-5 h-5 flex-shrink-0 animate-pulse" aria-hidden="true"></i>
+      <div class="min-w-0">
+        <!-- 1. "Momento" größer dargestellt (text-lg sm:text-xl) -->
+        <h1 class="text-lg sm:text-xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-pink-500 to-cyan-500 leading-none">
+          Momento
+        </h1>
+        <!-- 2. "des&nbsp;Lebens" bleibt durch &nbsp; immer zusammen -->
+        <!-- Nickname direkt in die Unterzeile integriert (statt eines
+             eigenen Elements) - der ohnehin schon kompakte Header bekommt
+             dadurch keinen zusätzlichen Baustein. Wird von
+             updateHeaderNickname() in script.js befüllt (@Name), sobald
+             die Seite lädt oder der Name im Share-Modal geändert wird. -->
+        <p class="text-[11px] text-retro-muted font-medium leading-tight truncate">
+          Die Gemischte Tüte des&nbsp;Lebens · <span id="header-nickname-display" class="text-retro-text font-bold"></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Rechter Bereich: Buttons -->
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <!-- 3. Kompakter Button: "+ Thema" in einer Zeile -->
+      <button onclick="openCreateTopicModal()" aria-label="Neues Thema erstellen" class="text-xs font-bold px-2.5 py-1.5 rounded-full bg-retro-accent/10 text-retro-accent border border-retro-accent/30 hover:bg-retro-accent/20 transition-all flex items-center gap-1 whitespace-nowrap">
+        <i data-lucide="plus" class="w-3.5 h-3.5" aria-hidden="true"></i>
+        <span>Thema</span>
+      </button>
+
+      <button onclick="toggleInboxPanel()" aria-label="Antworten von Freunden anzeigen" class="relative p-2 rounded-full bg-retro-accent/10 text-retro-accent border border-retro-accent/30 hover:bg-retro-accent/20 transition-all flex items-center justify-center">
+        <i data-lucide="bell" class="w-4 h-4" aria-hidden="true"></i>
+        <span id="inbox-badge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-black leading-4 text-center">0</span>
+      </button>
+
+      <button onclick="toggleSearch()" aria-label="Suche umschalten" class="p-2 rounded-full bg-retro-secondary/10 text-retro-secondary border border-retro-secondary/30 hover:bg-retro-secondary/20 transition-all flex items-center justify-center">
+        <i data-lucide="search" id="search-icon" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+    </div>
+
+  </div>
+</header>
+
+  <!-- SEARCH BAR -->
+  <div id="search-container" class="hidden flex-shrink-0 max-w-md mx-auto w-full px-4 pt-2 pb-1 animate-fade-in z-40">
+    <div class="relative">
+      <input type="text" id="search-input" oninput="handleSearch()" placeholder="In der Gemischten Tüte suchen..." class="w-full bg-retro-card border border-retro-border rounded-2xl pl-9 pr-9 py-2 text-xs text-retro-text placeholder-retro-muted/65 focus:outline-none focus:border-retro-accent shadow-inner">
+      <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-retro-muted/60" aria-hidden="true"></i>
+      <button onclick="clearSearch()" class="absolute right-3 top-2.5 text-retro-muted hover:text-retro-text" aria-label="Suche loeschen">
+        <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN MITTENBEREICH -->
+  <main class="flex-1 max-w-md mx-auto p-3.5 w-full flex flex-col justify-between overflow-y-auto overflow-x-hidden no-scrollbar min-h-0 perspective-1000 [touch-action:pan-y]">
+
+    <!-- INVITE BANNER -->
+    <div id="invite-banner" class="hidden mb-2 flex-shrink-0 bg-gradient-to-r from-retro-accent/20 via-retro-secondary/20 to-retro-accent/20 border border-retro-accent/40 p-2.5 rounded-2xl flex items-center justify-between gap-2 text-xs animate-fade-in text-retro-text">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-full bg-retro-accent text-white font-bold flex items-center justify-center flex-shrink-0 text-xs" aria-hidden="true">
+          👋
+        </div>
+        <div>
+          <p class="font-bold text-retro-accent text-sm" id="invite-text">Ein Freund hat diesen Moment geteilt!</p>
+          <p class="text-xs text-retro-muted" id="invite-subtext">Stimm ab und checke euer Momento-Match.</p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('invite-banner').classList.add('hidden')" class="text-retro-muted hover:text-retro-text p-2" aria-label="Banner schliessen">
+        <i data-lucide="x" class="w-4 h-4" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- 3D CARD WRAPPER -->
+    <div id="card-flipper" class="flipper-container flex-1 min-h-[380px] [touch-action:pan-y]">
+      
+      <!-- CARD FRONT -->
+      <div id="share-card" class="card-face card-face-front flex flex-col justify-between gap-y-4 rounded-3xl bg-retro-card border border-retro-border p-4 sm:p-6 shadow-2xl transition-all duration-300 overflow-y-auto overflow-x-hidden no-scrollbar">
+        <div id="bg-glow" class="glow-effect absolute -right-10 -top-10 w-36 h-36 bg-retro-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <!-- OBERER KARTEN-INHALT -->
+        <div class="space-y-3">
+          <div class="flex justify-between items-start w-full">
+            <div class="space-y-1">
+              <!-- Ersteller-Anzeige wurde entfernt -->
+            </div>
+          </div>
+
+          <!-- Sponsor Banner -->
+          <div id="sponsor-badge" class="hidden bg-retro-accent/10 border border-retro-accent/30 rounded-xl p-2 flex items-center justify-between text-sm">
+            <span class="text-retro-accent font-medium flex items-center gap-1">
+              <i data-lucide="award" class="w-4 h-4 text-retro-accent" aria-hidden="true"></i>
+              Praesentiert von <strong id="sponsor-name">Partner</strong>
+            </span>
+            <a id="sponsor-link" href="#" target="_blank" rel="noopener" class="text-retro-accent underline hover:text-retro-accent font-bold">Mehr &rarr;</a>
+          </div>
+
+          <!-- Card Title -->
+          <div class="space-y-1">
+            <h2 id="card-title" class="text-2xl font-black text-retro-text tracking-tight leading-tight">Freibadpommes</h2>
+          </div>
+
+          <!-- VIBE & STICKER DISPLAY BEREICH -->
+          <div id="card-image-container" class="overflow-hidden rounded-xl border border-retro-border/80 shadow-sm relative h-36 sm:h-44 flex items-center justify-center transition-all duration-300">
+            <span id="card-vibe-sticker" class="filter drop-shadow-[0_8px_8px_rgba(0,0,0,0.35)] animate-pulse z-10 select-none">🍟</span>
+            <div class="absolute inset-0 opacity-[0.04] bg-[linear-gradient(45deg,#000_25%,transparent_25%),linear-gradient(-45deg,#000_25%,transparent_25%)] bg-[size:10px_10px]"></div>
+          </div>
+
+          <!-- ABSTIMMUNGS-OPTIONEN (Direkt unter dem Bild) -->
+          <div class="space-y-1.5">
+            <div class="grid grid-cols-3 gap-2 text-center" id="quiz-options"></div>
+          </div>
+        </div>
+
+        <!-- UNTERER KARTEN-INHALT -->
+        <div class="space-y-3">
+          <!-- PROGRESSIVE DISCLOSURE BEREICH -->
+          <div id="post-vote-actions" class="hidden pt-3 border-t border-retro-border/40 space-y-3 animate-fade-in">
+            <button id="btn-reveal-match" onclick="revealMatch()" class="w-full py-2.5 px-3 rounded-2xl bg-retro-subtle border border-retro-accent/40 text-retro-accent hover:bg-retro-accent/10 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95">
+              <i data-lucide="sparkles" class="w-4 h-4 text-retro-accent" aria-hidden="true"></i>
+              <span id="btn-reveal-match-text">Momento-Match aufdecken</span>
+            </button>
+
+            <div id="match-surprise" class="hidden bg-retro-subtle border border-retro-border p-3 rounded-2xl flex items-center justify-between gap-3 text-xs text-retro-text animate-fade-in">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-retro-accent to-retro-secondary flex items-center justify-center font-bold text-xs text-white shadow-sm flex-shrink-0" id="match-avatar">
+                  M88
+                </div>
+                <div class="text-left">
+                  <p class="font-black text-retro-accent text-xs tracking-wider uppercase leading-none mb-0.5" id="match-badge-title">Momento-Match! ⚡</p>
+                  <p class="text-xs text-retro-muted leading-tight" id="match-subtitle-text">Du hast denselben Vibe wie @Marc_88.</p>
+                </div>
+              </div>
+              <button onclick="sendVibeRequest()" class="flex-shrink-0 px-3 py-2 bg-retro-secondary/10 hover:bg-retro-secondary/20 text-retro-secondary border border-retro-secondary/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                <i data-lucide="message-square-plus" class="w-4 h-4" aria-hidden="true"></i>
+                <span>Vibe anfragen</span>
+              </button>
+            </div>
+
+            <!-- FREMDEINSCHÄTZUNG: AUFLÖSUNG (Empfänger-Sicht bei ?mode=estimate) -->
+            <div id="estimate-reveal" class="hidden bg-retro-subtle border border-retro-border p-3 rounded-2xl space-y-2.5 text-xs text-retro-text animate-fade-in">
+              <p class="font-black text-retro-accent text-xs tracking-wider uppercase text-center" id="estimate-reveal-title">Auflösung 🎯</p>
+              <p class="text-center font-bold text-[11px] leading-snug text-retro-muted" id="estimate-reveal-gap-text"></p>
+            </div>
+
+            <!-- Share Buttons -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="openShareModal()" class="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all hover:scale-[1.02] active:scale-95">
+                <i data-lucide="share-2" class="w-4 h-4" aria-hidden="true"></i> Mit Freunden
+              </button>
+              <button onclick="shareToStory()" class="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 text-white font-bold text-xs shadow-md transition-all hover:scale-[1.02] active:scale-95">
+                <i data-lucide="instagram" class="w-4 h-4" aria-hidden="true"></i> Als Story teilen
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CARD BACK (FORMULAR) -->
+      <div id="share-card-back" class="card-face card-face-back flex flex-col justify-start gap-y-3 rounded-3xl bg-retro-card border border-retro-border p-4 sm:p-6 shadow-2xl overflow-y-auto overflow-x-hidden no-scrollbar select-text">
+        <button onclick="toggleFlip()" aria-label="Zurück zur Karte" class="absolute top-3 right-3 p-2 text-retro-muted hover:text-retro-text z-10">
+            <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+
+        <div class="text-center flex-shrink-0">
+            <h2 class="text-base font-black text-retro-accent tracking-wider uppercase">Einen Moment beitragen</h2>
+            <p class="text-sm text-retro-muted">Fuege der Gemischten Tuete ein neues Thema hinzu.</p>
+        </div>
+
+        <form id="create-card-form" onsubmit="handleCreateCardSubmit(event)" class="flex-1 flex flex-col text-xs min-h-0">
+
+            <input type="hidden" id="create-mode" value="new">
+
+            <!-- OBERER BEREICH: alle Eingabefelder, wachsen natuerlich mit dem Inhalt -->
+            <div class="space-y-4">
+
+                <div id="field-new-topic" class="space-y-1">
+    <label for="create-title" class="font-bold text-retro-muted text-xs uppercase tracking-wider">Neuer Begriff / Hauptthema</label>
+    <input type="text" id="create-title" placeholder="z.B. Klingelstreich" class="w-full bg-retro-subtle border border-retro-border rounded-xl px-3 py-2.5 text-base sm:text-lg font-black text-retro-text focus:outline-none focus:border-retro-accent shadow-inner">
+</div>
+
+                <div id="field-contrib-topic" class="space-y-1 hidden">
+                </div>
+
+                <div id="design-selector-wrapper" class="space-y-1.5">
+                    <div id="design-fields" class="grid grid-cols-2 gap-3 p-2.5 bg-retro-subtle/50 rounded-2xl border border-retro-border/50">
+                        <button type="button" onclick="openVibeOverlay()" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-retro-border hover:border-retro-accent bg-retro-subtle/80 hover:bg-retro-card active:scale-[0.98] transition-all text-center">
+                            <span class="text-xs font-black text-retro-muted uppercase tracking-wider mb-1.5">1. Hintergrund</span>
+                            <div id="vibe-preview-box" class="w-full h-10 rounded-lg bg-gradient-to-tr from-pink-600 via-orange-500 to-amber-400 border border-white/20 shadow-sm flex items-center justify-center text-xs text-white font-bold select-none truncate px-1">
+                               Neon Sunset
+                            </div>
+                        </button>
+                        <button type="button" onclick="openStickerOverlay()" class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-retro-border hover:border-retro-accent bg-retro-subtle/80 hover:bg-retro-card active:scale-[0.98] transition-all text-center">
+                            <span class="text-xs font-black text-retro-muted uppercase tracking-wider mb-1.5">2. Sticker</span>
+                            <div id="sticker-preview-box" class="w-full h-10 rounded-lg bg-retro-subtle border border-retro-border flex items-center justify-center text-xl filter drop-shadow">
+                               🍟
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" id="create-vibe" value="sunset">
+                <input type="hidden" id="create-sticker" value="🍟">
+
+                <!-- DYNAMISCHER FRAGENTYP SELECTOR -->
+                <div class="space-y-1">
+                    <label class="font-bold text-retro-muted">Fragentyp</label>
+                    <div class="grid grid-cols-2 gap-1 bg-retro-subtle/50 p-1 rounded-2xl border border-retro-border/60">
+                        <button type="button" onclick="selectCreateType('choice')" id="type-btn-choice" class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all bg-retro-accent text-white leading-none">Choice</button>
+                        <button type="button" onclick="selectCreateType('versus')" id="type-btn-versus" class="py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all text-retro-muted hover:text-retro-text leading-none">Skala</button>
+                    </div>
+                    <input type="hidden" id="create-type" value="choice">
+                </div>
+
+                <!-- CHOICE-FELDER -->
+                <div id="wrapper-create-choice" class="grid grid-cols-3 gap-2">
+                    <div class="space-y-1">
+                        <label for="create-opt1" class="font-bold text-retro-muted">Opt 1</label>
+                        <input type="text" id="create-opt1" placeholder="Option A" class="w-full bg-retro-subtle border border-retro-border rounded-xl px-2 py-2 text-retro-text text-center focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="create-opt2" class="font-bold text-retro-muted">Opt 2</label>
+                        <input type="text" id="create-opt2" placeholder="Option B" class="w-full bg-retro-subtle border border-retro-border rounded-xl px-2 py-2 text-retro-text text-center focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="create-opt3" class="font-bold text-retro-muted">Opt 3</label>
+                        <input type="text" id="create-opt3" placeholder="Option C" class="w-full bg-retro-subtle border border-retro-border rounded-xl px-2 py-2 text-retro-text text-center focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- SKALA-FELDER (nutzt dieselbe Balken-Komponente wie frueher "Versus") -->
+                <div id="wrapper-create-versus" class="hidden grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label for="create-left-label" class="font-bold text-retro-muted">Linker Pol</label>
+                        <input type="text" id="create-left-label" placeholder="z.B. Gar nicht 😇" class="w-full bg-retro-subtle border border-retro-border rounded-xl px-2 py-2 text-retro-text text-center focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label for="create-right-label" class="font-bold text-retro-muted">Rechter Pol</label>
+                        <input type="text" id="create-right-label" placeholder="z.B. Absolut 💀" class="w-full bg-retro-subtle border border-retro-border rounded-xl px-2 py-2 text-retro-text text-center focus:outline-none">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- UNTERER BEREICH: Aktions-Buttons, werden per mt-auto nach unten
+                 verankert und nutzen so die volle verfuegbare Kartenhoehe aus.
+                 Bei wenig Platz ruecken sie automatisch naeher an die Felder
+                 heran (durch pt-4), bei viel Platz wandern sie weiter nach unten. -->
+            <div class="space-y-2 pt-4 mt-auto flex-shrink-0">
+                <button type="submit" class="w-full py-3 bg-retro-accent text-white font-bold rounded-xl shadow hover:opacity-90 active:scale-95 transition-all">
+                    In Gemischte Tuete packen
+                </button>
+
+                <button type="button" id="modal-action-delete" onclick="deleteMyVersion()" class="hidden w-full py-2.5 text-red-500 font-bold text-xs rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 transition-all flex items-center justify-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-4 h-4" aria-hidden="true"></i>
+                    <span>Meine Version löschen</span>
+                </button>
+            </div>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FIXED BOTTOM CONTROL BAR -->
+  <div class="flex-shrink-0 max-w-md mx-auto w-full p-2.5 bg-retro-bg/95 backdrop-blur-md border-t border-retro-border z-40">
+    <button onclick="openCommentsSheet()" class="w-full py-2 bg-retro-subtle/80 hover:bg-retro-subtle border border-retro-border/80 rounded-xl text-xs font-semibold text-retro-text flex items-center justify-center gap-2 transition-all shadow-sm">
+      <span id="comments-btn-text">💬 Gedanken lesen</span>
+    </button>
+  </div>
+
+  <!-- BOTTOM SHEET: Gedankenbereich -->
+  <div id="comments-sheet-backdrop" onclick="closeCommentsSheet()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300 opacity-0"></div>
+  <div id="comments-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-retro-card border-t border-retro-border rounded-t-3xl max-w-md mx-auto transform translate-y-full transition-transform duration-300 ease-out flex flex-col max-h-[85vh] shadow-2xl">
+    <div class="p-4 border-b border-retro-border flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="message-square" class="text-retro-accent w-4 h-4" aria-hidden="true"></i>
+        <h3 class="text-xs font-black text-retro-text uppercase tracking-wider">Community-Gedanken</h3>
+      </div>
+      <button onclick="closeCommentsSheet()" aria-label="Gedanken schliessen" class="p-2.5 rounded-full hover:bg-retro-subtle text-retro-muted transition-colors">
+        <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="p-4 overflow-y-auto space-y-4 flex-1 no-scrollbar">
+      <div class="flex gap-2 bg-retro-subtle/50 p-3 rounded-2xl border border-retro-border">
+        <input type="text" id="memory-input" placeholder="Deine Anekdote oder dein Senf dazu..." class="flex-1 bg-retro-subtle border border-retro-border rounded-xl px-3 py-2 text-xs text-retro-text placeholder-retro-muted/65 focus:outline-none focus:border-retro-accent">
+        <button onclick="addMemory()" aria-label="Gedanken absenden" class="bg-gradient-to-r from-retro-accent to-retro-secondary hover:opacity-90 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center justify-center shadow active:scale-95">
+          <i data-lucide="send" class="w-4 h-4" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="memory-list" class="space-y-2 pb-6">
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SHARE MODAL -->
+  <div id="share-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 text-retro-text animate-fade-in">
+    <div class="bg-retro-card border border-retro-border rounded-3xl p-5 max-w-xs w-full space-y-4 relative text-center shadow-2xl">
+      <button onclick="closeModal('share-modal')" aria-label="Teilen schliessen" class="absolute top-3 right-3 p-2 text-retro-muted hover:text-retro-text">
+        <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+      </button>
+
+      <div class="space-y-1">
+        <h3 class="text-sm font-black uppercase tracking-wider text-retro-accent">Moment teilen</h3>
+        <p class="text-sm text-retro-muted">Fordere deine Freunde zum Vibe-Check heraus!</p>
+      </div>
+
+      <!-- Nickname-Badge im Share-Modal: zeigt den bereits gespeicherten
+           Namen an, statt ein prominentes Eingabefeld zu erzwingen (der
+           Name ist ja meistens schon im localStorage vorhanden). Klick auf
+           das Stift-Icon blendet ein kurzes Inline-Eingabefeld ein
+           (renderShareNicknameBadge/startEditShareNickname in script.js). -->
+      <div id="share-nickname-row" class="flex items-center justify-between gap-2 bg-retro-subtle/60 px-3 py-2.5 rounded-2xl border border-retro-border/60 text-left">
+        <!-- Wird per JS befüllt (renderShareNicknameBadge) -->
+      </div>
+
+      <!-- Modus-Wahl: Match vs. Fremdeinschätzung -->
+      <div class="text-left space-y-1.5">
+        <label class="block text-xs font-black uppercase tracking-wider text-retro-muted">
+          Was soll dein Freund tun?
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="share-mode-btn-match" type="button" onclick="setShareMode('match')" class="py-2.5 px-2 rounded-xl text-[11px] font-black uppercase tracking-tight border transition-all leading-tight">
+            🤝 Match-Modus
+          </button>
+          <button id="share-mode-btn-estimate" type="button" onclick="setShareMode('estimate')" class="py-2.5 px-2 rounded-xl text-[11px] font-black uppercase tracking-tight border transition-all leading-tight">
+            🎯 Fremdeinschätzung
+          </button>
+        </div>
+        <p id="share-mode-hint" class="hidden text-[11px] font-bold leading-snug"></p>
+      </div>
+
+      <!-- Share Action Buttons -->
+      <div class="space-y-2 pt-1">
+        <button id="btn-share-whatsapp" onclick="shareToWhatsApp()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 active:scale-95 disabled:cursor-not-allowed">
+          <i data-lucide="message-circle" class="w-4 h-4" aria-hidden="true"></i> Per WhatsApp senden
+        </button>
+        <button id="btn-share-copy" onclick="copyShareLink()" class="w-full py-2.5 bg-retro-subtle border border-retro-border hover:bg-retro-accent/10 text-retro-text font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2 active:scale-95 disabled:cursor-not-allowed">
+          <i data-lucide="copy" class="w-4 h-4" aria-hidden="true"></i> Link kopieren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Instagram Story Canvas Export -->
+  <div id="story-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 text-retro-text">
+    <div class="bg-retro-card border border-retro-border rounded-3xl p-5 max-w-xs w-full space-y-3 relative text-center">
+      <button onclick="closeStoryPreview()" aria-label="Vorschau schliessen" class="absolute top-3 right-3 p-2 text-retro-muted hover:text-retro-text">
+        <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+      </button>
+
+      <div class="space-y-1">
+        <h3 class="text-sm font-bold text-retro-text">Instagram Story Card</h3>
+        <div class="flex justify-between items-center px-1">
+          <p class="text-sm text-retro-muted text-left">Ideal fuer Umfrage-Sticker!</p>
+          <button onclick="cycleStoryTheme()" class="text-xs text-retro-secondary flex items-center gap-1 bg-retro-subtle px-2 py-0.5 rounded-lg border border-retro-border">
+            🎨 Design
+          </button>
+        </div>
+      </div>
+
+      <div id="story-canvas-target" class="aspect-[9/16] bg-gradient-to-b from-slate-900 via-purple-950 to-pink-950 rounded-2xl border border-pink-500/30 p-5 flex flex-col justify-between text-left shadow-2xl relative overflow-hidden transition-all duration-300">
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-xs font-black tracking-widest text-pink-400">
+            <span>MOMENTO</span>
+            <span id="story-cat-badge">#RETRO-VIBE</span>
+          </div>
+          <h4 id="story-word" class="text-2xl font-black text-white leading-tight">Freibadpommes</h4>
+
+          <span id="story-choice" class="text-xs text-amber-300 font-bold bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30 inline-block">
+            Vibe Check
+          </span>
+        </div>
+
+        <div id="story-image-container" class="my-2 overflow-hidden rounded-xl border border-white/20 h-28 shadow-lg relative flex items-center justify-center">
+          <span id="story-vibe-sticker" class="filter drop-shadow-[0_6px_6px_rgba(0,0,0,0.4)] z-10 select-none">🍟</span>
+          <div class="absolute inset-0 opacity-[0.04] bg-[linear-gradient(45deg,#fff_25%,transparent_25%),linear-gradient(-45deg,#fff_25%,transparent_25%)] bg-[size:10px_10px]"></div>
+        </div>
+
+        <div id="story-quote-container" class="bg-slate-950/80 p-3.5 rounded-2xl border border-white/10 text-sm text-slate-200 leading-relaxed">
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl text-center space-y-1 border border-dashed border-white/30">
+          <p class="text-sm font-bold text-slate-300 uppercase tracking-widest">👉 HIER UMFRAGE-STICKER PLATZIEREN 👈</p>
+          <div class="bg-white text-slate-950 font-mono font-bold text-xs py-1 px-2 rounded-lg">
+            momento.app
+          </div>
+        </div>
+      </div>
+
+      <button onclick="shareToStory()" class="w-full py-2.5 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95">
+        <i data-lucide="instagram" class="w-4 h-4" aria-hidden="true"></i> Als Story teilen
+      </button>
+    </div>
+  </div>
+
+  <!-- OVERLAY 0: Postfach (Antworten von Freunden auf Fremdeinschätzungen) -->
+  <div id="inbox-overlay" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 text-retro-text animate-fade-in">
+      <div class="bg-retro-card border border-retro-border rounded-3xl p-5 max-w-sm w-full space-y-4 relative max-h-[80vh] overflow-y-auto no-scrollbar shadow-2xl">
+          <button type="button" onclick="closeInboxPanel()" aria-label="Postfach schliessen" class="absolute top-3 right-3 p-2 text-retro-muted hover:text-retro-text">
+              <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+          <div class="text-center">
+              <h3 class="text-sm font-black text-retro-accent tracking-wider uppercase">🎯 Antworten von Freunden</h3>
+              <p class="text-xs text-retro-muted">So haben andere dich eingeschätzt.</p>
+          </div>
+
+          <div id="inbox-list" class="space-y-2.5">
+            <!-- Wird per JavaScript befüllt (renderInboxList) -->
+          </div>
+
+          <p id="inbox-empty-hint" class="hidden text-center text-xs text-retro-muted py-4">
+            Noch keine neuen Antworten. Teile eine Fremdeinschätzung, um loszulegen! 🎯
+          </p>
+      </div>
+  </div>
+
+  <!-- OVERLAY 1: Vibe-Hintergrundauswahl -->
+  <div id="vibe-overlay" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 text-retro-text animate-fade-in">
+      <div class="bg-retro-card border border-retro-border rounded-3xl p-5 max-w-sm w-full space-y-4 relative max-h-[80vh] overflow-y-auto no-scrollbar shadow-2xl">
+          <button type="button" onclick="closeVibeOverlay()" aria-label="Hintergrundauswahl schliessen" class="absolute top-3 right-3 p-2 text-retro-muted hover:text-retro-text">
+              <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+          <div class="text-center">
+              <h3 class="text-sm font-black text-retro-accent tracking-wider uppercase">Retro-Vibe Hintergrund</h3>
+              <p class="text-xs text-retro-muted">Waehle einen der 15 atmosphaerischen Farbverlaeufe.</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2.5" id="vibe-overlay-grid">
+          </div>
+      </div>
+  </div>
+
+  <!-- OVERLAY 2: Sticker-Bibliothek -->
+  <div id="sticker-overlay" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 text-retro-text animate-fade-in">
+      <div class="bg-retro-card border border-retro-border rounded-3xl p-5 max-w-sm w-full space-y-4 relative max-h-[85vh] overflow-y-auto overflow-x-hidden no-scrollbar shadow-2xl">
+          <button type="button" onclick="closeStickerOverlay()" aria-label="Sticker-Bibliothek schliessen" class="absolute top-3 right-3 p-2 text-retro-muted hover:text-retro-text">
+              <i data-lucide="x" class="w-5 h-5" aria-hidden="true"></i>
+          </button>
+          <div class="text-center">
+              <h3 class="text-sm font-black text-retro-accent tracking-wider uppercase">Sticker-Bibliothek</h3>
+              <p class="text-xs text-retro-muted">Kategorie antippen, dann Sticker antippen zum Übernehmen.</p>
+          </div>
+
+          <!-- Kategorie-Reiter: nur Antippen, kein Wischen zwischen Kategorien-
+               Inhalten noetig. Die Reihe selbst darf bei vielen Kategorien
+               horizontal scrollen (touch-action:pan-x) - das ist eine simple,
+               einzelne Wisch-Zone mit wenigen Elementen, kein verschachteltes
+               Scrollen wie zuvor bei den Stickern selbst. -->
+          <div id="sticker-overlay-tabs" class="flex gap-2 justify-center overflow-x-auto no-scrollbar pb-1 [touch-action:pan-x]">
+          </div>
+
+          <!-- Sticker-Raster der AKTIVEN Kategorie: normales Grid, das ganz
+               regulaer mit dem Rest des Overlays vertikal mitscrollt - keine
+               eigene, zusaetzliche Scroll-Richtung mehr. -->
+          <div id="sticker-overlay-grid" class="grid grid-cols-6 gap-2 bg-retro-subtle/50 p-2 rounded-2xl border border-retro-border/40">
+          </div>
+      </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+      if (typeof updateHeaderNickname === 'function') {
+        updateHeaderNickname();
+      }
+    });
+
+    // ==========================================================
+    // SERVICE-WORKER-REGISTRIERUNG (PWA)
+    // ==========================================================
+    // Meldet dem Browser: "Hier ist ein Service Worker (sw.js), bitte
+    // installiere ihn für diese Seite." Läuft NACH dem vollständigen Laden
+    // der Seite ("load"-Event), damit die Registrierung den eigentlichen
+    // App-Start nicht verlangsamt. "serviceWorker" in navigator prüft, ob
+    // der aktuelle Browser Service Worker überhaupt unterstützt (praktisch
+    // alle modernen Browser tun das, aber sicher ist sicher).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          // Kein Absturz, falls die Registrierung fehlschlägt (z.B. weil
+          // die Seite lokal ohne HTTPS läuft – Service Worker verlangen
+          // aus Sicherheitsgründen HTTPS, außer auf "localhost", das ist
+          // als Ausnahme extra erlaubt).
+          console.warn('Service Worker konnte nicht registriert werden:', err.message);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+/* ==========================================================================
+   THEMES & VARIABLE DEFINITIONS
+   ========================================================================== */
+
+/* Standard Theme (Dark Retro Neon) */
+:root {
+    --bg-color: #080c14;
+    --card-bg: #121927;
+    --border-color: #1f2b3e;
+    --accent-color: #f59e0b; 
+    --secondary-color: #ff3399; 
+    --text-main: #cbd5e1;
+    --text-muted: #94a3b8;
+    --box-subtle: #0f172a;
+    --glow-color: rgba(255, 51, 153, 0.15);
+}
+
+/* 90s Game Boy & Teal Nostalgia */
+[data-theme="90s"] {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --border-color: #334155;
+    --accent-color: #06b6d4; 
+    --secondary-color: #10b981; 
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --box-subtle: #0f172a;
+    --glow-color: rgba(6, 182, 212, 0.15);
+}
+
+/* ==========================================================================
+   MOBILE: EINGABEFELDER NICHT ZU KLEIN
+   ========================================================================== */
+/* Safari auf dem iPhone zoomt automatisch in die Seite hinein, sobald ein
+   Eingabefeld mit weniger als 16px Schriftgroesse fokussiert wird. Da wir
+   das Pinch-Zoom (siehe viewport-Meta-Tag) nicht mehr sperren, wuerde das
+   sonst zu einem ruckartigen, unerwuenschten Reinzoomen fuehren. Diese Regel
+   erzwingt auf schmalen Bildschirmen 16px, unabhaengig von der Tailwind-
+   Klasse (z.B. text-xs), die sonst auf dem Feld sitzt. */
+@media (max-width: 767px) {
+    input[type="text"],
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ==========================================================================
+   BASE & TRANSITIONS
+   ========================================================================== */
+
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+}
+
+/* Dynamic Cards & Container Theme Transitions */
+#share-card, 
+header, 
+footer, 
+.bg-retro-card,
+.bg-retro-subtle {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar { 
+    width: 4px; 
+    height: 4px;
+}
+::-webkit-scrollbar-track { 
+    background: var(--bg-color); 
+}
+::-webkit-scrollbar-thumb { 
+    background: var(--border-color); 
+    border-radius: 4px; 
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
+/* Hide Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+.no-scrollbar { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+
+/* ==========================================================================
+   ANIMATIONS & EFFECTS
+   ========================================================================== */
+
+@keyframes pulseGlow {
+    0%, 100% { 
+        opacity: 0.35; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.75; 
+        transform: scale(1.08);
+    }
+}
+
+.glow-effect { 
+    animation: pulseGlow 3.5s infinite ease-in-out; 
+    background-color: var(--glow-color);
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(4px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================================================
+   VERSUS- & SKALA-MODUS
+   ========================================================================== */
+
+/* Eigene Slider-Klasse statt einer globalen input[type=range]-Regel:
+   so bleiben andere Regler (falls ihr spaeter mal welche hinzufuegt) von
+   diesem Styling unberuehrt - nur Elemente mit class="scale-slider"
+   bekommen das grosse Touch-Design. */
+.scale-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 10px;
+    border-radius: 9999px;
+    background: var(--border-color); /* Fallback, falls kein Inline-Gradient gesetzt ist */
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    outline: none;
+}
+
+/* Macht den nativen Regler-Track unsichtbar, damit der eigene (per JS gesetzte)
+   Farbverlauf des <input>-Elements selbst als Hintergrund durchscheint. */
+.scale-slider::-webkit-slider-runnable-track {
+    background: transparent;
+    border-radius: 9999px;
+    height: 10px;
+}
+.scale-slider::-moz-range-track {
+    background: transparent;
+    border: none;
+    border-radius: 9999px;
+    height: 10px;
+}
+.scale-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 9999px;
+    background: var(--accent-color);
+    border: 3px solid var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+.scale-slider::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 9999px;
+    background: var(--accent-color);
+    border: 3px solid var(--card-bg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+.scale-slider:active::-webkit-slider-thumb { transform: scale(1.12); }
+.scale-slider:active::-moz-range-thumb { transform: scale(1.12); }
+
+/* Sichtbarer Fokus-Ring fuer Tastatur-Bedienung (Barrierefreiheit) */
+.scale-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--accent-color), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.scale-slider:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 3px var(--accent-color), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Die schwebende Zahlen-Blase, die per JavaScript (positionValueBubble)
+   exakt ueber dem Slider-Thumb positioniert wird */
+.value-bubble {
+    position: absolute;
+    top: -34px;
+    left: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
+    transition: left 0.08s linear;
+}
+.value-bubble::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--accent-color);
+}
+
+/* Einflug-Animationen fuer die Skala-Marker */
+@keyframes markerPopDown {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -6px) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+@keyframes markerPopUp {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 6px) scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+/* Oberer Pfeil (Eigenes Voting - zeigt nach unten) */
+.marker-pop-down {
+    animation: markerPopDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Unterer Pfeil (Community Schnitt - zeigt nach oben) */
+.marker-pop-up {
+    animation: markerPopUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Fallback-Klasse */
+.marker-pop {
+    animation: markerPopDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ==========================================================================
+   3D CARD FLIP STYLING
+   ========================================================================== */
+.perspective-1000 {
+    perspective: 1000px;
+}
+
+.flipper-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.card-face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden; /* Safari Support */
+}
+
+.card-face-front {
+    z-index: 2;
+    transform: rotateY(0deg);
+}
+
+.card-face-back {
+    transform: rotateY(180deg);
+    z-index: 1;
+}
+
+/* ============================================================================
+   STICKER-BIBLIOTHEK: Fade-Out-Hinweis bei scrollbaren Kategorien
+   ============================================================================
+   Wird per JS (renderStickerGrid in script.js) nur dann hinzugefügt, wenn
+   eine Kategorie mehr als 5 Zeilen (30 Sticker) hat und deshalb intern
+   scrollbar ist. "mask-image" blendet die untersten ca. 24px des Rasters
+   weich aus - ein dezenter visueller Hinweis "hier gibt's noch mehr",
+   ohne einen sichtbaren Scrollbalken zu brauchen. Nur bei WIRKLICH
+   scrollbaren Kategorien aktiv, damit kurze Kategorien nicht unnötig am
+   unteren Rand ausgeblichen wirken.
+   ============================================================================ */
+.sticker-grid-fade {
+    mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+}

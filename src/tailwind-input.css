@@ -1,0 +1,12 @@
+/* ============================================================================
+   Tailwind-Einstiegspunkt
+   ============================================================================
+   Diese Datei ist NUR die "Bauanleitung" für den npm-Befehl unten – sie wird
+   NICHT direkt im Browser geladen. Der Befehl "npm run build:css" liest
+   diese drei Zeilen, ersetzt sie durch das komplette, fertig kompilierte
+   Tailwind-CSS (nur die Klassen, die du in public/*.html und public/*.js
+   tatsächlich benutzt) und schreibt das Ergebnis nach public/tailwind.css.
+   ============================================================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
